@@ -1,34 +1,68 @@
-import db.DBConnection;
+import dao.BankDAO;
+import model.Account;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.Scanner;
+
 
 public class BankApp {
     public static void main(String[] args) {
-        //소켓을 통해 DB연결
-        Connection conn = DBConnection.getInstance();
+        Scanner sc = new Scanner(System.in);
 
-        //버퍼 달기
-        try { //문법 오류가 날 수도 있기 때문에
-            String insert = "insert into account_tb(password, balance, created_at) values(?, ?, now())";
-            String delete = "delete from account_tb where number = ?";
-            String update = "update account_tb set balance = balance + ? where number = ?";
-            PreparedStatement pstmt = conn.prepareStatement(update);
+        // http://bank.com/account GET
+        // http://bank.com/account/10 GET
+        // http://bank.com/account POST -> 이것만으로는 안 된다.값을 더 받아야 한다.
+        // http://bank.com/account/1 DELETE
+        // http://bank.com/account/1 PUT
 
-            //쿼리 완성시키기(? 자리에 값 넣기)
-            //pstmt.setString(1, "1234");
-            //pstmt.setINT(2, 1000);
 
-            //pstmt.setInt(1, 4);
+        // /account
+        // /account/1
+        // /account
+        // /account/1
+        // /account/1
+        System.out.println("http 메서드를 입력하세요");
+        String method = sc.nextLine(); // GET, POST 이런 것들을 받을 예정
 
-            pstmt.setInt(1, 4000);
-            pstmt.setInt(2, 1);
-            int num = pstmt.executeUpdate(); //flush
-            System.out.println(num);
+        System.out.println("식별자를 입력하세요");
+        String action = sc.nextLine(); // /account, /account/1 이런 것들을 받을 예정
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        String body = "";
+
+        BankDAO bankDAO = new BankDAO();
+        if(method.equals("GET")){
+            if(action.equals("/account")){
+                List<Account> accountList = bankDAO.selectAll();
+                System.out.println(accountList);
+            } else if (action.equals("/account/5")) {
+                Account account = bankDAO.selectByNumber(5);
+                System.out.println(account);
+            }
+        }else if(method.equals("POST")){
+            System.out.println("body 데이터를 입력하세요");
+            body = sc.nextLine();
+
+            //password=1234&balance=1000
+            String[] st1 = body.split("&");
+            String password = st1[0].split("=")[1];
+            int balance = Integer.parseInt(st1[1].split("=")[1]);
+
+            if(action.equals("/account")){
+                bankDAO.insert(password,balance);
+            }
+
+        }else if(method.equals("PUT")){
+            System.out.println("body 데이터를 입력하세요");
+            body = sc.nextLine();
+
+            if(action.equals("/account/9")){
+                bankDAO.updateByNumber(Integer.parseInt(body), 9);
+            }
+        }else if(method.equals("DELETE")){
+            if(action.equals("/account/5")) {
+                bankDAO.deleteByNumber(5);
+            }
+
         }
     }
 }

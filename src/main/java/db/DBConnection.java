@@ -2,7 +2,6 @@ package db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class DBConnection {
 
@@ -18,8 +17,9 @@ public class DBConnection {
             Connection conn = DriverManager.getConnection(url, username, password);
             System.out.println("db connect success");
             return conn;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return null;
     }
 }
